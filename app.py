@@ -1,14 +1,17 @@
-import os
 import json
 from flask import Flask, request, jsonify
 from google.cloud import secretmanager
+from google.cloud import documentai
 import requests
+import re
 
 app = Flask(__name__)
 
 # --- Configuración y Carga de Secretos ---
 WHATSAPP_SECRET_ID = "whatsapp-permanent-token"
 VERIFY_TOKEN = "FK6xvrpVFDpR3YQCRGWRhkS5A3fVQ3hHcJo92AMXgfddDcKJL43kFRzL1EveKtJC"
+DOCUMENT_AI_LOCATION = "us"
+DOCUMENT_AI_PROCESSOR_ID = "623b3141ba0444ab"
 
 def get_secret(secret_id):
     """Accede a un secreto almacenado en Google Secret Manager."""
@@ -33,26 +36,48 @@ if not WHATSAPP_ACCESS_TOKEN:
 # --- Funciones de Integración (Simuladas) ---
 
 def process_invoice_with_document_ai(image_data):
-    """
-    SIMULACIÓN: Enviar la imagen de la factura a Document AI y extraer datos.
-    
-    En una implementación real, aquí usarías la librería 'google-cloud-documentai'.
-    """
-    print(f"Enviando {len(image_data)} bytes a Document AI...")
-    
-    # Reemplaza esta simulación con la llamada real a Document AI Invoice Parser
-    # https://cloud.google.com/document-ai/docs/process-documents-client-libraries
-    
-    # Datos extraídos simulados
-    extracted_data = {
-        "proveedor": "Simulacro S.A.",
-        "fecha": "2025-11-18",
-        "monto_total": 450.75,
-        "moneda": "USD"
-    }
-    
-    print(f"Datos extraídos simulados: {extracted_data}")
-    return extracted_data
+    try:
+        client = documentai.DocumentProcessorServiceClient()
+        name = client.processor_path("supercharly", DOCUMENT_AI_LOCATION, DOCUMENT_AI_PROCESSOR_ID)
+        raw_document = documentai.RawDocument(content=image_data, mime_type="image/jpeg")
+        request = documentai.ProcessRequest(name=name, raw_document=raw_document)
+        result = client.process_document(request=request)
+        doc = result.document
+        def get_entity(type_name):
+            for e in doc.entities:
+                if e.type_ == type_name:
+                    return e
+            return None
+        def text(e):
+            return e.mention_text if e and e.mention_text else None
+        supplier = text(get_entity("supplier_name")) or text(get_entity("vendor_name"))
+        date = text(get_entity("invoice_date"))
+        currency = text(get_entity("currency"))
+        total_entity = get_entity("total_amount")
+        amount_text = None
+        if total_entity:
+            for p in getattr(total_entity, "properties", []):
+                if p.type_ in ("amount", "value") and not amount_text:
+                    amount_text = p.mention_text
+                if p.type_ == "currency" and not currency:
+                    currency = p.mention_text
+            if not amount_text:
+                amount_text = total_entity.mention_text
+        def parse_amount(s):
+            if not s:
+                return None
+            m = re.search(r"([-+]?[0-9]*[.,][0-9]+|[-+]?[0-9]+)", s)
+            return float(m.group(1).replace(",", ".")) if m else None
+        amount = parse_amount(amount_text)
+        extracted_data = {
+            "proveedor": supplier or "",
+            "fecha": date or "",
+            "monto_total": amount if amount is not None else None,
+            "moneda": currency or ""
+        }
+        return extracted_data
+    except Exception:
+        return {"proveedor": "", "fecha": "", "monto_total": None, "moneda": ""}
 
 
 def save_to_google_sheets(data):
@@ -165,9 +190,9 @@ def webhook():
                             else:
                                 print("ERROR: Falló al guardar en Google Sheets.")
                         
-                        # (Opcional) Responder a WhatsApp con una confirmación
-                        # response_message = "Tu factura ha sido recibida y procesada."
-                        # send_whatsapp_message(message["from"], response_message)
+                        
+                        response_message = "Tu factura ha sido recibida y procesada."
+                        send_whatsapp_message(message["from"], response_message)
 
                 else:
                     print(f"Mensaje no procesado: Tipo '{message_type}' no es 'image'.")
