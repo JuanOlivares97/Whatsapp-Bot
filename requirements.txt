@@ -1,0 +1,5 @@
+flask
+requests
+google-cloud-secretmanager
+google-cloud-documentai
+#google-api-python-client
