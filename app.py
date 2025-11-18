@@ -7,20 +7,12 @@ import requests
 app = Flask(__name__)
 
 # --- Configuración y Carga de Secretos ---
-
-# El nombre del secreto en Secret Manager donde guardaste el Token Permanente de Meta
 WHATSAPP_SECRET_ID = "whatsapp-permanent-token"
-# El token que configuraste en Meta para verificar el Webhook
-VERIFY_TOKEN = "FK6xvrpVFDpR3YQCRGWRhkS5A3fVQ3hHcJo92AMXgfddDcKJL43kFRzL1EveKtJC" 
+VERIFY_TOKEN = "FK6xvrpVFDpR3YQCRGWRhkS5A3fVQ3hHcJo92AMXgfddDcKJL43kFRzL1EveKtJC"
 
 def get_secret(secret_id):
     """Accede a un secreto almacenado en Google Secret Manager."""
-    project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
-    if not project_id:
-        # En Cloud Run, esta variable de entorno se establece automáticamente. 
-        # Si ejecutas localmente, necesitarás establecer GOOGLE_CLOUD_PROJECT o hardcodear el ID.
-        print("ADVERTENCIA: Variable GOOGLE_CLOUD_PROJECT no encontrada. Usando un valor por defecto.")
-        project_id = "tu-proyecto-id-gcp" 
+    project_id = "supercharly"
     
     # Crea el cliente de Secret Manager
     client = secretmanager.SecretManagerServiceClient()
@@ -72,8 +64,7 @@ def save_to_google_sheets(data):
     
     En una implementación real, aquí usarías la librería 'google-api-python-client'.
     """
-    # Reemplaza 'YOUR_SPREADSHEET_ID' con el ID real de tu hoja de Google Sheets.
-    SPREADSHEET_ID = "YOUR_SPREADSHEET_ID" 
+    SPREADSHEET_ID = "YOUR_SPREADSHEET_ID"
     
     # Reemplaza esta simulación con la llamada real a la API de Sheets
     # Asegúrate de que la cuenta de servicio de Cloud Run esté compartida con la hoja de Sheets.
@@ -193,4 +184,4 @@ def webhook():
 
 # Esta línea solo es necesaria si ejecutas Flask localmente (ej: gunicorn o wsgi)
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+    app.run(debug=True, host="0.0.0.0", port=8080)
