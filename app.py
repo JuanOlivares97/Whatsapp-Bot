@@ -14,16 +14,13 @@ def get_secret(secret_id):
     """Accede a un secreto almacenado en Google Secret Manager."""
     project_id = "supercharly"
     
-    # Crea el cliente de Secret Manager
-    client = secretmanager.SecretManagerServiceClient()
-    name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
-    
     try:
+        client = secretmanager.SecretManagerServiceClient()
+        name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
         response = client.access_secret_version(request={"name": name})
         return response.payload.data.decode("UTF-8")
     except Exception as e:
         print(f"ERROR: No se pudo acceder al secreto {secret_id}. Asegúrate de que la cuenta de servicio de Cloud Run tenga el rol 'Secret Manager Secret Accessor'. Detalle: {e}")
-        # En un entorno real, esto debería ser un error fatal o una respuesta de fallback.
         return None
 
 # Carga el token permanente al inicio del servicio

@@ -3,3 +3,4 @@ requests
 google-cloud-secret-manager
 google-cloud-documentai
 #google-api-python-client
+gunicorn
