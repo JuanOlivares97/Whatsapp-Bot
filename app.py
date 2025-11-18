@@ -11,7 +11,7 @@ app = Flask(__name__)
 # El nombre del secreto en Secret Manager donde guardaste el Token Permanente de Meta
 WHATSAPP_SECRET_ID = "whatsapp-permanent-token"
 # El token que configuraste en Meta para verificar el Webhook
-VERIFY_TOKEN = "un_token_secreto_que_tu_creas_aqui" 
+VERIFY_TOKEN = "FK6xvrpVFDpR3YQCRGWRhkS5A3fVQ3hHcJo92AMXgfddDcKJL43kFRzL1EveKtJC" 
 
 def get_secret(secret_id):
     """Accede a un secreto almacenado en Google Secret Manager."""
