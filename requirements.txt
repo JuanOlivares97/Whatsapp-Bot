@@ -1,5 +1,5 @@
 flask
 requests
-google-cloud-secretmanager
+google-cloud-secret-manager
 google-cloud-documentai
 #google-api-python-client
