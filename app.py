@@ -181,7 +181,3 @@ def webhook():
 
         # Meta requiere una respuesta 200 OK para evitar reintentos.
         return jsonify({"status": "received"}), 200
-
-# Esta línea solo es necesaria si ejecutas Flask localmente (ej: gunicorn o wsgi)
-if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=8080)
